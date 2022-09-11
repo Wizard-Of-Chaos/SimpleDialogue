@@ -1,4 +1,4 @@
-# DialogueGUITool
+# Simple Dialogue Tool
  A GUI tool for use in creating dialogue trees and exporting them to XML. Designed for use with other libraries.
  
  This tool was built with CMake, Qt 6.3 and about a day's worth of annoyance with menu design. In order to compile, compile this project with Qt however your conscience dictates and let fly.
