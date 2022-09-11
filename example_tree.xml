@@ -1,14 +1,4 @@
-# DialogueGUITool
- A GUI tool for use in creating dialogue trees and exporting them to XML. Designed for use with other libraries.
- 
- This tool was built with CMake, Qt 6.3 and about a day's worth of annoyance with menu design. In order to compile, compile this project with Qt however your conscience dictates and let fly.
- 
- XML documents consist of a "tree", which contains "nodes" that contain choices. Nodes include a speaker, text of the node, and choices associated with that node. Choices in turn include their own text, the ID of the node they lead to (or "none" if there isn't a followup) and an effect, which by default can be "exit" or "none" (but of course you can add your own, although how your system handles said effects is up to you.
- 
- Example XML format:
- 
- ```xml
- <?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <tree id="example_tree" minsector="0">
     <speakers>
         <speaker name="Martin Hally"/>
@@ -28,4 +18,3 @@
         <choice text="I'm never going to use this." next="none" effect="exit"/>
     </node>
 </tree>
- ```

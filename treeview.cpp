@@ -128,7 +128,7 @@ void TreeView::m_saveCurrentNode()
         currentItem->choices.clear();
         if(currentChoice) { //save current choice stuff
             m_saveCurrentChoice();
-            choiceTextEdit->setText(tr(""));
+            //choiceTextEdit->setText(tr(""));
         }
         for(int i = 0; i < choices->count(); ++i) { //save all choice data
             ChoiceItem* c = (ChoiceItem*)choices->item(i);
@@ -141,6 +141,7 @@ void TreeView::onNodeSelect(QListWidgetItem* item)
 {
     NodeItem* node = (NodeItem*)item;
     m_saveCurrentNode();
+    choiceTextEdit->setText(tr(""));
     currentItem = node;
     idEdit->setText(node->text()); //set ID
     nodeTextEdit->setText(node->dialogueText); //set text
@@ -356,6 +357,7 @@ void TreeView::loadXML(QString fname)
     for(int i = 0; i < speakers.size(); ++i) {
         speakerEdit->addItem(speakers[i]);
     }
+    nextNodeEdit->addItem("none");
     for(int i = 0; i < nodes->count(); ++i) {
         NodeItem* item = (NodeItem*)nodes->item(i);
         if(item->text() == "root") {
