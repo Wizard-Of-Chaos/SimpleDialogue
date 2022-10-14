@@ -47,6 +47,10 @@ TreeView::TreeView()
     layout->addWidget(effectEdit, 3, 4, 1, 1);
     layout->addWidget(addEffect, 4, 4, 1, 1);
 
+    removeChoice = new QPushButton(tr("Remove Choice"), this);
+    layout->addWidget(removeChoice, 5, 4, 1, 1);
+    connect(removeChoice, SIGNAL(clicked()), this, SLOT(onRemoveChoice()));
+
     connect(addNode, SIGNAL(clicked()), this, SLOT(onAddNode()));
     connect(addChoice, SIGNAL(clicked()), this, SLOT(onAddChoice()));
     connect(addEffect, SIGNAL(clicked()), this, SLOT(onAddEffect()));
@@ -97,6 +101,8 @@ void TreeView::m_displayNode(NodeItem* item)
         choiceItem->dat = choice;
         ++count;
     }
+    currentItem=item;
+    currentChoice=nullptr;
 }
 
 void TreeView::m_renameNode(QString old, QString str)
@@ -231,6 +237,32 @@ void TreeView::onAddChoice()
 {
     auto n = m_addChoice(ChoiceData());
     currentItem->choices.push_back(n->dat);
+}
+
+void TreeView::onRemoveChoice()
+{
+    if(!currentItem) return;
+
+    if(currentChoice) {
+        for(int i=0; i < choices->count(); ++i) {
+            ChoiceItem* item = (ChoiceItem*)choices->item(i);
+            if(item->dat.choiceText == currentChoice->dat.choiceText) {
+                choices->takeItem(i);
+                break;
+            }
+        }
+        for(int i=0; i < choices->count(); ++i) {
+            ChoiceItem* item = (ChoiceItem*)choices->item(i);
+            item->dat.id=i;
+        }
+        currentItem->choices.clear();
+        for(int i =0; i < choices->count(); ++i) {
+            ChoiceItem* item = (ChoiceItem*)choices->item(i);
+            currentItem->choices.push_back(item->dat);
+        }
+        m_saveCurrentNode();
+        onNodeSelect(currentItem);
+    }
 }
 
 void TreeView::onAddEffect()

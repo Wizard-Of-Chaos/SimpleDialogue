@@ -42,13 +42,16 @@ public:
     void setSector(unsigned int min) {minSector = min;}
     void setTreeID(QString nid) {id = nid;}
     void loadXML(QString fname);
+
 public slots:
     void onNodeSelect(QListWidgetItem* item);
     void onChoiceSelect(QListWidgetItem* item);
     void onAddNode();
     void onAddChoice();
     void onAddEffect();
+    void onRemoveChoice();
     void onSaveXML();
+
 private:
     void m_displayNode(NodeItem* item);
     void m_renameNode(QString old, QString str);
@@ -69,6 +72,7 @@ private:
 
     QListWidget* choices;
     QPushButton* addChoice;
+    QPushButton* removeChoice; //Removes the CURRENT choice
     QTextEdit* choiceTextEdit;
     QPushButton* addEffect;
 
