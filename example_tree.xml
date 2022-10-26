@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tree id="example_tree" minsector="0">
     <speakers>
-        <speaker name="Martin Hally"/>
+        <speaker name="Steven Mitchell"/>
     </speakers>
     <node id="root">
-        <speaker name="Martin Hally"/>
-        <text text="Hi, everyone! I'm here to demonstrate the use of loading and saving XML documents with the GUI tool."/>
-        <choice text="Neat." next="none" effect="exit"/>
-        <choice text="I don't really care." next="none" effect="exit"/>
-        <choice text="Tell me more." next="more_response" effect="none"/>
+        <speaker name="Steven Mitchell"/>
+        <text text="This is a quick test to demonstrate the new dialogue tool."/>
+        <choice text="Tell me more!" next="tellmemore" effect="none">
+            <required_flag id="XML_REQUIREDFLAG_1"/>
+            <required_tree id="XML_PRIORDIALOGUE_1"/>
+            <sets_flag id="XML_FLAGSET_1"/>
+        </choice>
+        <choice text="I don't really care." next="none" effect="exit">
+            <sets_flag id="XML_DONTCARE"/>
+        </choice>
     </node>
-    <node id="more_response">
-        <speaker name="Martin Hally"/>
-        <text text="Sure! The tool spits out and loads XML documents, with a tree that contains dialogue nodes and choices for each node. The choices carry an ID for the next node and an 'effect', which can be anything you want it to be."/>
-        <choice text="I get it now. Thanks, Martin." next="none" effect="exit"/>
-        <choice text="Can you explain all that again?" next="root" effect="none"/>
-        <choice text="I'm never going to use this." next="none" effect="exit"/>
+    <node id="tellmemore">
+        <speaker name="Steven Mitchell"/>
+        <text text="Well, realistically, this new system allows for both effects and setting flags, which can then be messed with as you desire."/>
+        <choice text="Run that by me again?" next="root" effect="none">
+            <sets_flag id="XML_REPEATED"/>
+            <sets_flag id="XML_USER_IDIOT"/>
+        </choice>
+        <choice text="Nifty. Thanks, Steven." next="none" effect="exit">
+            <sets_flag id="XML_POLITE"/>
+        </choice>
     </node>
 </tree>

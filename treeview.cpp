@@ -84,6 +84,9 @@ TreeView::TreeView()
     connect(addRequiredFlag, SIGNAL(clicked()), this, SLOT(onAddRequiredFlag()));
     connect(addRequiredTree, SIGNAL(clicked()), this, SLOT(onAddRequiredTree()));
     connect(addSetFlag, SIGNAL(clicked()), this, SLOT(onAddSetFlag()));
+    connect(removeRequiredFlag, SIGNAL(clicked()), this, SLOT(onRemoveRequiredFlag()));
+    connect(removeRequiredTree, SIGNAL(clicked()), this, SLOT(onRemoveRequiredTree()));
+    connect(removeSetFlag, SIGNAL(clicked()), this, SLOT(onRemoveSetFlag()));
 
 
     this->setLayout(layout);
@@ -195,6 +198,9 @@ void TreeView::onNodeSelect(QListWidgetItem* item)
     for(auto dat : node->choices) { //set up all choices
         m_addChoice(dat);
     }
+    requiredFlags->clear();
+    requiredTrees->clear();
+    setsFlags->clear();
     currentChoice=nullptr;
 }
 
@@ -204,6 +210,18 @@ void TreeView::m_saveCurrentChoice()
         currentChoice->dat.choiceText = choiceTextEdit->toPlainText(); //save text
         currentChoice->dat.effect = effectEdit->currentText(); //save effect
         currentChoice->dat.nextNode = nextNodeEdit->currentText(); //save next node
+        currentChoice->dat.requiredFlags.clear();
+        currentChoice->dat.requiredTrees.clear();
+        currentChoice->dat.setFlags.clear();
+        for(int i = 0; i < requiredFlags->count(); ++i) {
+            currentChoice->dat.requiredFlags.push_back(requiredFlags->item(i)->text());
+        }
+        for(int i = 0; i < requiredTrees->count(); ++i) {
+            currentChoice->dat.requiredTrees.push_back(requiredTrees->item(i)->text());
+        }
+        for(int i = 0; i < setsFlags->count(); ++i) {
+            currentChoice->dat.setFlags.push_back(setsFlags->item(i)->text());
+        }
     }
 }
 
@@ -233,6 +251,18 @@ void TreeView::onChoiceSelect(QListWidgetItem* item)
     }
     if(choice->dat.nextNode == "none") {
         nextNodeEdit->setCurrentIndex(0);
+    }
+    requiredTrees->clear();
+    requiredFlags->clear();
+    setsFlags->clear();
+    for(int i = 0; i <choice->dat.requiredFlags.size(); ++i) {
+        requiredFlags->addItem(choice->dat.requiredFlags[i]);
+    }
+    for(int i = 0; i <choice->dat.requiredTrees.size(); ++i) {
+        requiredTrees->addItem(choice->dat.requiredTrees[i]);
+    }
+    for(int i = 0; i <choice->dat.setFlags.size(); ++i) {
+        setsFlags->addItem(choice->dat.setFlags[i]);
     }
 }
 
@@ -323,7 +353,11 @@ void TreeView::onAddRequiredFlag()
 }
 void TreeView::onRemoveRequiredFlag()
 {
-
+    if(!currentChoice) return;
+    for(QListWidgetItem* item : requiredFlags->selectedItems()) {
+        delete requiredFlags->takeItem(requiredFlags->row(item));
+    }
+    m_saveCurrentChoice();
 }
 
 void TreeView::onAddRequiredTree()
@@ -342,7 +376,11 @@ void TreeView::onAddRequiredTree()
 
 void TreeView::onRemoveRequiredTree()
 {
-
+    if(!currentChoice) return;
+    for(QListWidgetItem* item : requiredTrees->selectedItems()) {
+        delete requiredTrees->takeItem(requiredTrees->row(item));
+    }
+    m_saveCurrentChoice();
 }
 
 void TreeView::onAddSetFlag()
@@ -361,7 +399,11 @@ void TreeView::onAddSetFlag()
 
 void TreeView::onRemoveSetFlag()
 {
-
+    if(!currentChoice) return;
+    for(QListWidgetItem* item : setsFlags->selectedItems()) {
+        delete setsFlags->takeItem(setsFlags->row(item));
+    }
+    m_saveCurrentChoice();
 }
 
 void TreeView::onSaveXML()
@@ -404,6 +446,21 @@ void TreeView::onSaveXML()
                 w.writeAttribute("text", choice.choiceText);
                 w.writeAttribute("next", choice.nextNode);
                 w.writeAttribute("effect", choice.effect);
+                for(auto flag : choice.requiredFlags) {
+                    w.writeStartElement("required_flag");
+                    w.writeAttribute("id", flag);
+                    w.writeEndElement();
+                }
+                for(auto tree : choice.requiredTrees) {
+                    w.writeStartElement("required_tree");
+                    w.writeAttribute("id", tree);
+                    w.writeEndElement();
+                }
+                for(auto flag : choice.setFlags) {
+                    w.writeStartElement("sets_flag");
+                    w.writeAttribute("id", flag);
+                    w.writeEndElement();
+                }
                 w.writeEndElement();
             }
             w.writeEndElement();
@@ -435,6 +492,8 @@ void TreeView::loadXML(QString fname)
     QString previous="";
     NodeItem* curNode=nullptr;
 
+    ChoiceData dat = ChoiceData();
+
     while(!xml.atEnd()) {
         auto token = xml.readNext();
         auto name = xml.name();
@@ -452,6 +511,10 @@ void TreeView::loadXML(QString fname)
                 speakers.push_back(attr.value("name").toString());
             }
             if(name.toString() == "node") {
+                if(previous == "choice") {
+                    curNode->choices.push_back(dat);
+                    dat = ChoiceData();
+                }
                 previous = "node";
                 curNode = new NodeItem(attr.value("id").toString(), nodes);
             }
@@ -461,15 +524,35 @@ void TreeView::loadXML(QString fname)
             if(name.toString() == "text" && previous == "node") {
                 curNode->dialogueText = attr.value("text").toString();
             }
-            if(name.toString() == "choice" && previous == "node") {
-                ChoiceData dat;
+            if(name.toString() == "choice" && previous == "choice") {
+                curNode->choices.push_back(dat);
+                dat = ChoiceData();
                 dat.choiceText = attr.value("text").toString();
                 dat.nextNode = attr.value("next").toString();
                 dat.effect = attr.value("effect").toString();
                 effects[dat.effect]=true;
-                curNode->choices.push_back(dat);
+            }
+            if(name.toString() == "choice" && previous == "node") {
+                dat = ChoiceData();
+                previous = "choice";
+                dat.choiceText = attr.value("text").toString();
+                dat.nextNode = attr.value("next").toString();
+                dat.effect = attr.value("effect").toString();
+                effects[dat.effect]=true;
+            }
+            if(name.toString() == "required_flag" && previous == "choice") {
+                dat.requiredFlags.push_back(attr.value("id").toString());
+            }
+            if(name.toString() == "required_tree" && previous == "choice") {
+                dat.requiredTrees.push_back(attr.value("id").toString());
+            }
+            if(name.toString() == "sets_flag" && previous == "choice") {
+                dat.setFlags.push_back(attr.value("id").toString());
             }
         }
+    }
+    if(dat.choiceText != "") {
+        curNode->choices.push_back(dat);
     }
     for(int i = 0; i < speakers.size(); ++i) {
         speakerEdit->addItem(speakers[i]);
