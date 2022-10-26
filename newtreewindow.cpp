@@ -45,11 +45,15 @@ void NewTreeWindow::onAddSpeaker()
 
 void NewTreeWindow::onNewSpeakerConfirm()
 {
-    speakers->addItem(newSpeakerLine->text());
-    layout->removeRow(newSpeakerLine);
-    layout->removeRow(newSpeakerConfirm);
-    if(newSpeakerLine) delete newSpeakerLine;
-    if(newSpeakerConfirm) delete newSpeakerConfirm;
+    if(newSpeakerLine) {
+        speakers->addItem(newSpeakerLine->text());
+        layout->removeRow(newSpeakerLine);
+        //delete newSpeakerLine;
+    }
+    if(newSpeakerConfirm) {
+        layout->removeRow(newSpeakerConfirm);
+        //delete newSpeakerConfirm;
+    }
     newSpeakerLine = nullptr;
     newSpeakerConfirm = nullptr;
     addSpeaker->show();

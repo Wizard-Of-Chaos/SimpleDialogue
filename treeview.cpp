@@ -23,32 +23,56 @@ TreeView::TreeView()
     choices = new QListWidget(this);
     choiceTextEdit = new QTextEdit(this);
     addChoice = new QPushButton(tr("Add Choice"), this);
-    addEffect = new QPushButton(tr("Add Effect"), this);
+    addEffect = new QPushButton(tr("Add Immediate Effect"), this);
     saveXML = new QPushButton(tr("Save to XML"), this);
+    removeChoice = new QPushButton(tr("Remove Choice"), this);
+    nextNodeLabel = new QLabel(tr("Next node:"), this);
 
+    addRequiredFlag = new QPushButton(tr("Add Required Flag"), this);
+    removeRequiredFlag = new QPushButton(tr("Remove Required Flag"), this);
+    addRequiredTree = new QPushButton(tr("Add Required Tree"), this);
+    removeRequiredTree = new QPushButton(tr("Remove Required Tree"), this);
+    requiredFlags = new QListWidget(this);
+    requiredTrees = new QListWidget(this);
+
+    addSetFlag = new QPushButton(tr("Add Flag To Set"), this);
+    removeSetFlag = new QPushButton(tr("Remove Flag To Set"), this);
+    setsFlags = new QListWidget(this);
+
+    layout->setColumnMinimumWidth(0,150);
     layout->setColumnMinimumWidth(1, 120);
     layout->setColumnMinimumWidth(2, 120);
-    layout->setRowMinimumHeight(3, 150);
-    //layout->setColumnMinimumWidth(3, 120);
-    layout->setColumnMinimumWidth(4, 200);
-    layout->addWidget(nodes, 0, 0, 4, 1);
+    layout->setRowMinimumHeight(1, 150);
+    layout->setRowMinimumHeight(3, 80);
+    layout->setRowMinimumHeight(4, 80);
+    layout->addWidget(nodes, 1, 0, 2, 1);
     layout->addWidget(idEdit, 0, 1, 1, 1);
     layout->addWidget(speakerEdit, 0, 2, 1, 1);
     layout->addWidget(nodeTextEdit, 1, 1, 2, 2);
 
-    layout->addWidget(addNode, 4, 0, 1, 1);
-    layout->addWidget(saveXML, 4, 1, 1, 1);
+    layout->addWidget(addNode, 0, 0, 1, 1);
+    layout->addWidget(saveXML, 2, 0, 1, 1);
 
     layout->addWidget(addChoice, 0, 3, 1, 1);
-    layout->addWidget(choices, 1, 3, 2, 1);
-    layout->addWidget(choiceTextEdit, 2, 4, 1, 1);
-    layout->setColumnMinimumWidth(4, 120);
-    layout->addWidget(nextNodeEdit, 3, 3, 1, 1);
-    layout->addWidget(effectEdit, 3, 4, 1, 1);
+    layout->addWidget(removeChoice, 0, 4, 1, 1);
+    layout->addWidget(nextNodeLabel, 3, 3, 1, 1);
+    layout->addWidget(nextNodeEdit, 3, 4, 1, 1);
+    layout->addWidget(choices, 1, 3, 2, 2);
+    layout->addWidget(choiceTextEdit, 1, 5, 1, 2);
+    layout->addWidget(effectEdit, 4, 3, 1, 1);
     layout->addWidget(addEffect, 4, 4, 1, 1);
 
-    removeChoice = new QPushButton(tr("Remove Choice"), this);
-    layout->addWidget(removeChoice, 5, 4, 1, 1);
+    layout->addWidget(addRequiredFlag, 2, 5, 1, 1);
+    layout->addWidget(removeRequiredFlag, 2, 6, 1, 1);
+    layout->addWidget(requiredFlags, 3, 5, 2, 2);
+    layout->addWidget(addRequiredTree, 2, 7, 1, 1);
+    layout->addWidget(removeRequiredTree, 2, 8, 1, 1);
+    layout->addWidget(requiredTrees, 3, 7, 2, 2);
+
+    layout->addWidget(addSetFlag, 0, 7, 1, 1);
+    layout->addWidget(removeSetFlag, 0, 8, 1, 1);
+    layout->addWidget(setsFlags, 1, 7, 1, 2);
+
     connect(removeChoice, SIGNAL(clicked()), this, SLOT(onRemoveChoice()));
 
     connect(addNode, SIGNAL(clicked()), this, SLOT(onAddNode()));
@@ -57,8 +81,13 @@ TreeView::TreeView()
     connect(saveXML, SIGNAL(clicked()), this, SLOT(onSaveXML()));
     connect(nodes, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(onNodeSelect(QListWidgetItem*)));
     connect(choices, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(onChoiceSelect(QListWidgetItem*)));
+    connect(addRequiredFlag, SIGNAL(clicked()), this, SLOT(onAddRequiredFlag()));
+    connect(addRequiredTree, SIGNAL(clicked()), this, SLOT(onAddRequiredTree()));
+    connect(addSetFlag, SIGNAL(clicked()), this, SLOT(onAddSetFlag()));
+
+
     this->setLayout(layout);
-    this->resize(600, 400);
+    //this->resize(600, 400);
     this->show();
 }
 
@@ -279,6 +308,62 @@ void TreeView::onAddEffect()
     effectEdit->addItem(name.text());
 }
 
+void TreeView::onAddRequiredFlag()
+{
+    QDialog log(this);
+    QLineEdit name(&log);
+    QDialogButtonBox box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &log);
+    QFormLayout lay(&log);
+    lay.addRow(tr("New required flag:"), &name);
+    lay.addRow(&box);
+    connect(&box, SIGNAL(accepted()), &log, SLOT(accept()));
+    connect(&box, SIGNAL(rejected()), &log, SLOT(reject()));
+    if(log.exec() != QDialog::Accepted) return;
+    requiredFlags->addItem(name.text());
+}
+void TreeView::onRemoveRequiredFlag()
+{
+
+}
+
+void TreeView::onAddRequiredTree()
+{
+    QDialog log(this);
+    QLineEdit name(&log);
+    QDialogButtonBox box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &log);
+    QFormLayout lay(&log);
+    lay.addRow(tr("New required tree ID:"), &name);
+    lay.addRow(&box);
+    connect(&box, SIGNAL(accepted()), &log, SLOT(accept()));
+    connect(&box, SIGNAL(rejected()), &log, SLOT(reject()));
+    if(log.exec() != QDialog::Accepted) return;
+    requiredTrees->addItem(name.text());
+}
+
+void TreeView::onRemoveRequiredTree()
+{
+
+}
+
+void TreeView::onAddSetFlag()
+{
+    QDialog log(this);
+    QLineEdit name(&log);
+    QDialogButtonBox box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &log);
+    QFormLayout lay(&log);
+    lay.addRow(tr("New flag to set:"), &name);
+    lay.addRow(&box);
+    connect(&box, SIGNAL(accepted()), &log, SLOT(accept()));
+    connect(&box, SIGNAL(rejected()), &log, SLOT(reject()));
+    if(log.exec() != QDialog::Accepted) return;
+    setsFlags->addItem(name.text());
+}
+
+void TreeView::onRemoveSetFlag()
+{
+
+}
+
 void TreeView::onSaveXML()
 {
     QString defaultName = id + tr(".xml");
@@ -417,5 +502,16 @@ TreeView::~TreeView()
     delete choiceTextEdit;
     delete addChoice;
     delete addEffect;
+    delete nextNodeLabel;
     delete saveXML;
+    delete addRequiredFlag;
+    delete removeRequiredFlag;
+    delete addRequiredTree;
+    delete removeRequiredTree;
+    delete requiredFlags;
+    delete requiredTrees;
+
+    delete addSetFlag;
+    delete removeSetFlag;
+    delete setsFlags;
 }

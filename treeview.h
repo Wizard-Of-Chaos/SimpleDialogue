@@ -7,12 +7,16 @@
 #include <QPushButton>
 #include <QGridLayout>
 #include <QComboBox>
+#include <QLabel>
 
 struct ChoiceData
 {
     QString choiceText="";
     QString effect="none";
     QString nextNode="none";
+    std::vector<QString> requiredFlags;
+    std::vector<QString> requiredTrees;
+    std::vector<QString> setFlags;
     int id=0;
 };
 
@@ -50,6 +54,14 @@ public slots:
     void onAddChoice();
     void onAddEffect();
     void onRemoveChoice();
+
+    void onAddRequiredFlag();
+    void onRemoveRequiredFlag();
+    void onAddRequiredTree();
+    void onRemoveRequiredTree();
+    void onAddSetFlag();
+    void onRemoveSetFlag();
+
     void onSaveXML();
 
 private:
@@ -66,6 +78,7 @@ private:
     QLineEdit* idEdit;
     QComboBox* speakerEdit;
     QTextEdit* nodeTextEdit;
+    QLabel* nextNodeLabel;
     QComboBox* nextNodeEdit;
     QComboBox* effectEdit;
     QPushButton* addNode;
@@ -75,6 +88,17 @@ private:
     QPushButton* removeChoice; //Removes the CURRENT choice
     QTextEdit* choiceTextEdit;
     QPushButton* addEffect;
+
+    QPushButton* addRequiredFlag;
+    QPushButton* removeRequiredFlag;
+    QPushButton* addRequiredTree;
+    QPushButton* removeRequiredTree;
+    QListWidget* requiredFlags;
+    QListWidget* requiredTrees;
+
+    QPushButton* addSetFlag;
+    QPushButton* removeSetFlag;
+    QListWidget* setsFlags;
 
     QPushButton* saveXML;
 
