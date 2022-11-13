@@ -50,6 +50,8 @@ public:
 public slots:
     void onNodeSelect(QListWidgetItem* item);
     void onChoiceSelect(QListWidgetItem* item);
+    void onEffectActivate(int index);
+    void onNodeEditActivate(int index);
     void onAddNode();
     void onAddChoice();
     void onAddEffect();
@@ -67,7 +69,7 @@ public slots:
 private:
     void m_displayNode(NodeItem* item);
     void m_renameNode(QString old, QString str);
-    ChoiceItem* m_addChoice(ChoiceData dat);
+    ChoiceItem* m_addChoice(ChoiceData dat, std::string name="");
     void m_saveCurrentChoice();
     void m_saveCurrentNode();
     NodeItem* currentItem=nullptr;

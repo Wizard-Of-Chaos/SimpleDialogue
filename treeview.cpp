@@ -87,6 +87,8 @@ TreeView::TreeView()
     connect(removeRequiredFlag, SIGNAL(clicked()), this, SLOT(onRemoveRequiredFlag()));
     connect(removeRequiredTree, SIGNAL(clicked()), this, SLOT(onRemoveRequiredTree()));
     connect(removeSetFlag, SIGNAL(clicked()), this, SLOT(onRemoveSetFlag()));
+    connect(effectEdit, SIGNAL(activated(int)), this, SLOT(onEffectActivate(int)));
+    connect(nextNodeEdit, SIGNAL(activated(int)), this, SLOT(onNodeEditActivate(int)));
 
 
     this->setLayout(layout);
@@ -129,7 +131,10 @@ void TreeView::m_displayNode(NodeItem* item)
     choices->clear();
     int count = 0;
     for(auto choice : item->choices) {
-        auto choiceItem = new ChoiceItem(tr("Choice ") + QString::number(count), choices);
+        std::string choiceName = "Choice " + std::to_string(count);
+        if(choice.nextNode == "none") choiceName += " [EXIT]";
+        if (choice.effect == "exit") choiceName += " [NONE]";
+        auto choiceItem = new ChoiceItem(tr(choiceName.c_str()), choices);
         choiceItem->dat = choice;
         ++count;
     }
@@ -195,8 +200,13 @@ void TreeView::onNodeSelect(QListWidgetItem* item)
         speakers.push_back(node->speaker); //set speaker
     }
     choices->clear();
+    int count = 0;
     for(auto dat : node->choices) { //set up all choices
-        m_addChoice(dat);
+        std::string choiceName = "Choice " + std::to_string(count);
+        if (dat.effect == "exit") choiceName += " [EXIT]";
+        if(dat.nextNode == "none") choiceName += " [NONE]";
+        m_addChoice(dat, choiceName);
+        ++count;
     }
     requiredFlags->clear();
     requiredTrees->clear();
@@ -266,6 +276,37 @@ void TreeView::onChoiceSelect(QListWidgetItem* item)
     }
 }
 
+void TreeView::onEffectActivate(int index)
+{
+    m_saveCurrentChoice();
+    onChoiceSelect(currentChoice);
+    int num = 0;
+    for(int i = 0; i < choices->count(); ++i) {
+        ChoiceItem* c = (ChoiceItem*)choices->item(i);
+        if(c==currentChoice) num = i;
+        break;
+    }
+    std::string name = "Choice " + std::to_string(num);
+    if(currentChoice->dat.effect == "exit") name += " [EXIT]";
+    if(currentChoice->dat.nextNode == "none") name += " [NONE]";
+    currentChoice->setText(tr(name.c_str()));
+}
+void TreeView::onNodeEditActivate(int index)
+{
+    m_saveCurrentChoice();
+    onChoiceSelect(currentChoice);
+    int num = 0;
+    for(int i = 0; i < choices->count(); ++i) {
+        ChoiceItem* c = (ChoiceItem*)choices->item(i);
+        if(c==currentChoice) num = i;
+        break;
+    }
+    std::string name = "Choice " + std::to_string(num);
+    if(currentChoice->dat.effect == "exit") name += " [EXIT]";
+    if(currentChoice->dat.nextNode == "none") name += " [NONE]";
+    currentChoice->setText(tr(name.c_str()));
+}
+
 void TreeView::onAddNode()
 {
     QDialog log(this);
@@ -283,10 +324,12 @@ void TreeView::onAddNode()
 
 }
 
-ChoiceItem* TreeView::m_addChoice(ChoiceData dat)
+ChoiceItem* TreeView::m_addChoice(ChoiceData dat, std::string name)
 {
     int num = choices->count();
-    auto item = new ChoiceItem(tr("Choice ") + QString::number(choices->count()), choices);
+    std::string cName = name;
+    if(cName == "") cName = "Choice " + std::to_string(choices->count()) + " [NONE]"; //fresh choice!
+    auto item = new ChoiceItem(tr(cName.c_str()), choices);
     item->dat = dat;
     item->dat.id = num;
     return item;
