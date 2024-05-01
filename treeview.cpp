@@ -211,7 +211,12 @@ void TreeView::onNodeSelect(QListWidgetItem* item)
     requiredFlags->clear();
     requiredTrees->clear();
     setsFlags->clear();
+
+    nextNodeEdit->setEnabled(false);
+    effectEdit->setEnabled(false);
+
     currentChoice=nullptr;
+    m_saveXML(tr("autosave-") + xmlName());
 }
 
 void TreeView::m_saveCurrentChoice()
@@ -233,6 +238,7 @@ void TreeView::m_saveCurrentChoice()
             currentChoice->dat.setFlags.push_back(setsFlags->item(i)->text());
         }
     }
+    m_saveXML(tr("autosave-") + xmlName());
 }
 
 void TreeView::onChoiceSelect(QListWidgetItem* item)
@@ -274,11 +280,17 @@ void TreeView::onChoiceSelect(QListWidgetItem* item)
     for(int i = 0; i <choice->dat.setFlags.size(); ++i) {
         setsFlags->addItem(choice->dat.setFlags[i]);
     }
+    nextNodeEdit->setEnabled(true);
+    effectEdit->setEnabled(true);
 }
 
 void TreeView::onEffectActivate(int index)
 {
-    m_saveCurrentChoice();
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
+    else return;
+
     onChoiceSelect(currentChoice);
     int num = 0;
     for(int i = 0; i < choices->count(); ++i) {
@@ -293,7 +305,11 @@ void TreeView::onEffectActivate(int index)
 }
 void TreeView::onNodeEditActivate(int index)
 {
-    m_saveCurrentChoice();
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
+    else return;
+
     onChoiceSelect(currentChoice);
     int num = 0;
     for(int i = 0; i < choices->count(); ++i) {
@@ -393,14 +409,21 @@ void TreeView::onAddRequiredFlag()
     connect(&box, SIGNAL(rejected()), &log, SLOT(reject()));
     if(log.exec() != QDialog::Accepted) return;
     requiredFlags->addItem(name.text());
+
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
 }
+
 void TreeView::onRemoveRequiredFlag()
 {
     if(!currentChoice) return;
     for(QListWidgetItem* item : requiredFlags->selectedItems()) {
         delete requiredFlags->takeItem(requiredFlags->row(item));
     }
-    m_saveCurrentChoice();
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
 }
 
 void TreeView::onAddRequiredTree()
@@ -423,7 +446,9 @@ void TreeView::onRemoveRequiredTree()
     for(QListWidgetItem* item : requiredTrees->selectedItems()) {
         delete requiredTrees->takeItem(requiredTrees->row(item));
     }
-    m_saveCurrentChoice();
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
 }
 
 void TreeView::onAddSetFlag()
@@ -446,79 +471,20 @@ void TreeView::onRemoveSetFlag()
     for(QListWidgetItem* item : setsFlags->selectedItems()) {
         delete setsFlags->takeItem(setsFlags->row(item));
     }
-    m_saveCurrentChoice();
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
+}
+
+QString TreeView::xmlName()
+{
+    return id + tr(".xml");
 }
 
 void TreeView::onSaveXML()
 {
-    QString defaultName = id + tr(".xml");
-    m_saveCurrentChoice();
-    m_saveCurrentNode();
-    QString filename=QFileDialog::getSaveFileName(this, "Save XML", QCoreApplication::applicationDirPath() + "/" + defaultName, "XML File(*.xml)");
-    if(!filename.isNull()) {
-        QBuffer buf;
-        buf.open(QBuffer::ReadWrite);
-        QXmlStreamWriter w(&buf);
-        w.setAutoFormatting(true);
-        w.writeStartDocument();
-        w.writeStartElement("tree");
-        w.writeAttribute("id", id);
-        w.writeAttribute("minsector", QString::number(minSector));
-
-        w.writeStartElement("speakers");
-        for(int i = 0; i < speakerEdit->count(); ++i) {
-            w.writeStartElement("speaker");
-            w.writeAttribute("name", speakerEdit->itemText(i));
-            w.writeEndElement();
-        }
-        w.writeEndElement();
-        for(int i = 0; i < nodes->count(); ++i) {
-            NodeItem* node = (NodeItem*)nodes->item(i);
-            if(!node) continue;
-
-            w.writeStartElement("node");
-            w.writeAttribute("id", node->text());
-            w.writeStartElement("speaker");
-            w.writeAttribute("name", node->speaker);
-            w.writeEndElement();
-            w.writeStartElement("text");
-            w.writeAttribute("text", node->dialogueText);
-            w.writeEndElement();
-            for(auto choice : node->choices) {
-                w.writeStartElement("choice");
-                w.writeAttribute("text", choice.choiceText);
-                w.writeAttribute("next", choice.nextNode);
-                w.writeAttribute("effect", choice.effect);
-                for(auto flag : choice.requiredFlags) {
-                    w.writeStartElement("required_flag");
-                    w.writeAttribute("id", flag);
-                    w.writeEndElement();
-                }
-                for(auto tree : choice.requiredTrees) {
-                    w.writeStartElement("required_tree");
-                    w.writeAttribute("id", tree);
-                    w.writeEndElement();
-                }
-                for(auto flag : choice.setFlags) {
-                    w.writeStartElement("sets_flag");
-                    w.writeAttribute("id", flag);
-                    w.writeEndElement();
-                }
-                w.writeEndElement();
-            }
-            w.writeEndElement();
-        }
-        w.writeEndElement();
-        w.writeEndDocument();
-        buf.close();
-
-        std::cout << buf.size() << std::endl;
-
-        QFile file(filename);
-        file.open(QIODevice::WriteOnly);
-        file.write(buf.buffer());
-        file.close();
-    }
+    QString filename=QFileDialog::getSaveFileName(this, "Save XML", QCoreApplication::applicationDirPath() + "/" + xmlName(), "XML File(*.xml)");
+    m_saveXML(filename);
 }
 
 void TreeView::loadXML(QString fname)
@@ -612,6 +578,78 @@ void TreeView::loadXML(QString fname)
         effectEdit->addItem(effect);
     }
     file.close();
+}
+
+void TreeView::m_saveXML(QString filename)
+{
+    if(currentChoice) {
+        m_saveCurrentChoice();
+    }
+    m_saveCurrentNode();
+    if(!filename.isNull()) {
+        QBuffer buf;
+        buf.open(QBuffer::ReadWrite);
+        QXmlStreamWriter w(&buf);
+        w.setAutoFormatting(true);
+        w.writeStartDocument();
+        w.writeStartElement("tree");
+        w.writeAttribute("id", id);
+        w.writeAttribute("minsector", QString::number(minSector));
+
+        w.writeStartElement("speakers");
+        for(int i = 0; i < speakerEdit->count(); ++i) {
+            w.writeStartElement("speaker");
+            w.writeAttribute("name", speakerEdit->itemText(i));
+            w.writeEndElement();
+        }
+        w.writeEndElement();
+        for(int i = 0; i < nodes->count(); ++i) {
+            NodeItem* node = (NodeItem*)nodes->item(i);
+            if(!node) continue;
+
+            w.writeStartElement("node");
+            w.writeAttribute("id", node->text());
+            w.writeStartElement("speaker");
+            w.writeAttribute("name", node->speaker);
+            w.writeEndElement();
+            w.writeStartElement("text");
+            w.writeAttribute("text", node->dialogueText);
+            w.writeEndElement();
+            for(auto choice : node->choices) {
+                w.writeStartElement("choice");
+                w.writeAttribute("text", choice.choiceText);
+                w.writeAttribute("next", choice.nextNode);
+                w.writeAttribute("effect", choice.effect);
+                for(auto flag : choice.requiredFlags) {
+                    w.writeStartElement("required_flag");
+                    w.writeAttribute("id", flag);
+                    w.writeEndElement();
+                }
+                for(auto tree : choice.requiredTrees) {
+                    w.writeStartElement("required_tree");
+                    w.writeAttribute("id", tree);
+                    w.writeEndElement();
+                }
+                for(auto flag : choice.setFlags) {
+                    w.writeStartElement("sets_flag");
+                    w.writeAttribute("id", flag);
+                    w.writeEndElement();
+                }
+                w.writeEndElement();
+            }
+            w.writeEndElement();
+        }
+        w.writeEndElement();
+        w.writeEndDocument();
+        buf.close();
+
+        //std::cout << buf.size() << std::endl;
+
+        QFile file(filename);
+        file.open(QIODevice::WriteOnly);
+        file.write(buf.buffer());
+        file.close();
+    }
 }
 
 TreeView::~TreeView()

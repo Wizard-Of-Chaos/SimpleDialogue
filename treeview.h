@@ -75,6 +75,9 @@ private:
     NodeItem* currentItem=nullptr;
     ChoiceItem* currentChoice=nullptr;
 
+    QString xmlName();
+    void m_saveXML(QString fname);
+
     QGridLayout* layout;
     QListWidget* nodes;
     QLineEdit* idEdit;

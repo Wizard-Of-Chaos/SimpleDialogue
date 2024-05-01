@@ -1,4 +1,5 @@
 #include "newtreewindow.h"
+#include <QMessageBox>
 
 NewTreeWindow::NewTreeWindow()
 {
@@ -19,7 +20,7 @@ NewTreeWindow::NewTreeWindow()
     buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
     layout->addRow(buttons);
     //connect is a QT macro to add a function to a button.
-    connect(buttons, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(buttons, SIGNAL(accepted()), this, SLOT(onAccept()));
     connect(buttons, SIGNAL(rejected()), this, SLOT(reject()));
     connect(addSpeaker, SIGNAL(clicked()), this, SLOT(onAddSpeaker()));
 }
@@ -57,4 +58,20 @@ void NewTreeWindow::onNewSpeakerConfirm()
     newSpeakerLine = nullptr;
     newSpeakerConfirm = nullptr;
     addSpeaker->show();
+}
+void NewTreeWindow::onAccept()
+{
+    if(speakers->count() <= 0) {
+        QMessageBox msg;
+        msg.setText("The tree requires at least one speaker.");
+        msg.exec();
+        return;
+    }
+    if(name->text() == "") {
+        QMessageBox msg;
+        msg.setText("ID must be set.");
+        msg.exec();
+        return;
+    }
+    accept();
 }

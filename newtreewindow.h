@@ -27,6 +27,7 @@ public:
 public slots:
     void onAddSpeaker();
     void onNewSpeakerConfirm();
+    void onAccept();
 };
 
 
