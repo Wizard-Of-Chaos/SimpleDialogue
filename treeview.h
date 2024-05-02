@@ -70,6 +70,7 @@ private:
     void m_displayNode(NodeItem* item);
     void m_renameNode(QString old, QString str);
     ChoiceItem* m_addChoice(ChoiceData dat, std::string name="");
+    void m_autosave();
     void m_saveCurrentChoice();
     void m_saveCurrentNode();
     NodeItem* currentItem=nullptr;

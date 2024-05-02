@@ -162,6 +162,14 @@ void TreeView::m_renameNode(QString old, QString str)
         }
     }
 }
+
+void TreeView::m_autosave()
+{
+    m_saveCurrentNode();
+    m_saveCurrentChoice();
+    m_saveXML(tr("autosave-") + xmlName());
+}
+
 void TreeView::m_saveCurrentNode()
 {
     if(currentItem) {
@@ -184,7 +192,7 @@ void TreeView::m_saveCurrentNode()
 void TreeView::onNodeSelect(QListWidgetItem* item)
 {
     NodeItem* node = (NodeItem*)item;
-    m_saveCurrentNode();
+    m_autosave();
     choiceTextEdit->setText(tr(""));
     currentItem = node;
     idEdit->setText(node->text()); //set ID
@@ -217,7 +225,6 @@ void TreeView::onNodeSelect(QListWidgetItem* item)
     effectEdit->setEnabled(false);
 
     currentChoice=nullptr;
-    m_saveXML(tr("autosave-") + xmlName());
 }
 
 void TreeView::m_saveCurrentChoice()
@@ -239,15 +246,12 @@ void TreeView::m_saveCurrentChoice()
             currentChoice->dat.setFlags.push_back(setsFlags->item(i)->text());
         }
     }
-    m_saveXML(tr("autosave-") + xmlName());
 }
 
 void TreeView::onChoiceSelect(QListWidgetItem* item)
 {
     ChoiceItem* choice = (ChoiceItem*)item;
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
+    m_autosave();
     currentChoice = choice;
     choiceTextEdit->setText(currentChoice->dat.choiceText); //set text
     bool found = false;
@@ -288,7 +292,7 @@ void TreeView::onChoiceSelect(QListWidgetItem* item)
 void TreeView::onEffectActivate(int index)
 {
     if(!currentChoice) return;
-    m_saveCurrentChoice();
+    m_autosave();
     onChoiceSelect(currentChoice);
     int num = 0;
     for(int i = 0; i < choices->count(); ++i) {
@@ -304,7 +308,7 @@ void TreeView::onEffectActivate(int index)
 void TreeView::onNodeEditActivate(int index)
 {
     if(!currentChoice) return;
-    m_saveCurrentChoice();
+    m_autosave();
     onChoiceSelect(currentChoice);
     int num = 0;
     for(int i = 0; i < choices->count(); ++i) {
@@ -332,7 +336,7 @@ void TreeView::onAddNode()
 
     NodeItem* newNode = new NodeItem(name.text(), nodes);
     nextNodeEdit->addItem(newNode->text()); //added to node editor just in case
-
+    m_autosave();
 }
 
 ChoiceItem* TreeView::m_addChoice(ChoiceData dat, std::string name)
@@ -373,7 +377,7 @@ void TreeView::onRemoveChoice()
             ChoiceItem* item = (ChoiceItem*)choices->item(i);
             currentItem->choices.push_back(item->dat);
         }
-        m_saveCurrentNode();
+        m_autosave();
         onNodeSelect(currentItem);
     }
 }
@@ -405,7 +409,7 @@ void TreeView::onAddRequiredFlag()
     if(log.exec() != QDialog::Accepted) return;
     requiredFlags->addItem(name.text());
 
-    m_saveCurrentChoice();
+    m_autosave();
 }
 
 void TreeView::onRemoveRequiredFlag()
@@ -414,7 +418,7 @@ void TreeView::onRemoveRequiredFlag()
     for(QListWidgetItem* item : requiredFlags->selectedItems()) {
         delete requiredFlags->takeItem(requiredFlags->row(item));
     }
-    m_saveCurrentChoice();
+    m_autosave();
 }
 
 void TreeView::onAddRequiredTree()
@@ -437,7 +441,7 @@ void TreeView::onRemoveRequiredTree()
     for(QListWidgetItem* item : requiredTrees->selectedItems()) {
         delete requiredTrees->takeItem(requiredTrees->row(item));
     }
-    m_saveCurrentChoice();
+    m_autosave();
 }
 
 void TreeView::onAddSetFlag()
@@ -460,7 +464,7 @@ void TreeView::onRemoveSetFlag()
     for(QListWidgetItem* item : setsFlags->selectedItems()) {
         delete setsFlags->takeItem(setsFlags->row(item));
     }
-    m_saveCurrentChoice();
+    m_autosave();
 }
 
 QString TreeView::xmlName()
@@ -470,8 +474,7 @@ QString TreeView::xmlName()
 
 void TreeView::onSaveXML()
 {
-    m_saveCurrentChoice();
-    m_saveCurrentNode();
+    m_autosave();
     QString filename=QFileDialog::getSaveFileName(this, "Save XML", QCoreApplication::applicationDirPath() + "/" + xmlName(), "XML File(*.xml)");
     m_saveXML(filename);
 }
