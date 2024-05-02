@@ -89,7 +89,8 @@ TreeView::TreeView()
     connect(removeSetFlag, SIGNAL(clicked()), this, SLOT(onRemoveSetFlag()));
     connect(effectEdit, SIGNAL(activated(int)), this, SLOT(onEffectActivate(int)));
     connect(nextNodeEdit, SIGNAL(activated(int)), this, SLOT(onNodeEditActivate(int)));
-
+    nextNodeEdit->setEnabled(false);
+    effectEdit->setEnabled(false);
 
     this->setLayout(layout);
     //this->resize(600, 400);
@@ -286,11 +287,8 @@ void TreeView::onChoiceSelect(QListWidgetItem* item)
 
 void TreeView::onEffectActivate(int index)
 {
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
-    else return;
-
+    if(!currentChoice) return;
+    m_saveCurrentChoice();
     onChoiceSelect(currentChoice);
     int num = 0;
     for(int i = 0; i < choices->count(); ++i) {
@@ -305,11 +303,8 @@ void TreeView::onEffectActivate(int index)
 }
 void TreeView::onNodeEditActivate(int index)
 {
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
-    else return;
-
+    if(!currentChoice) return;
+    m_saveCurrentChoice();
     onChoiceSelect(currentChoice);
     int num = 0;
     for(int i = 0; i < choices->count(); ++i) {
@@ -410,9 +405,7 @@ void TreeView::onAddRequiredFlag()
     if(log.exec() != QDialog::Accepted) return;
     requiredFlags->addItem(name.text());
 
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
+    m_saveCurrentChoice();
 }
 
 void TreeView::onRemoveRequiredFlag()
@@ -421,9 +414,7 @@ void TreeView::onRemoveRequiredFlag()
     for(QListWidgetItem* item : requiredFlags->selectedItems()) {
         delete requiredFlags->takeItem(requiredFlags->row(item));
     }
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
+    m_saveCurrentChoice();
 }
 
 void TreeView::onAddRequiredTree()
@@ -446,9 +437,7 @@ void TreeView::onRemoveRequiredTree()
     for(QListWidgetItem* item : requiredTrees->selectedItems()) {
         delete requiredTrees->takeItem(requiredTrees->row(item));
     }
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
+    m_saveCurrentChoice();
 }
 
 void TreeView::onAddSetFlag()
@@ -471,9 +460,7 @@ void TreeView::onRemoveSetFlag()
     for(QListWidgetItem* item : setsFlags->selectedItems()) {
         delete setsFlags->takeItem(setsFlags->row(item));
     }
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
+    m_saveCurrentChoice();
 }
 
 QString TreeView::xmlName()
@@ -483,6 +470,8 @@ QString TreeView::xmlName()
 
 void TreeView::onSaveXML()
 {
+    m_saveCurrentChoice();
+    m_saveCurrentNode();
     QString filename=QFileDialog::getSaveFileName(this, "Save XML", QCoreApplication::applicationDirPath() + "/" + xmlName(), "XML File(*.xml)");
     m_saveXML(filename);
 }
@@ -582,10 +571,6 @@ void TreeView::loadXML(QString fname)
 
 void TreeView::m_saveXML(QString filename)
 {
-    if(currentChoice) {
-        m_saveCurrentChoice();
-    }
-    m_saveCurrentNode();
     if(!filename.isNull()) {
         QBuffer buf;
         buf.open(QBuffer::ReadWrite);
