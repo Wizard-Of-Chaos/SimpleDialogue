@@ -56,6 +56,7 @@ public slots:
     void onAddChoice();
     void onAddEffect();
     void onRemoveChoice();
+    void onRenameNode();
 
     void onAddRequiredFlag();
     void onRemoveRequiredFlag();
@@ -81,7 +82,8 @@ private:
 
     QGridLayout* layout;
     QListWidget* nodes;
-    QLineEdit* idEdit;
+    QLabel* nodeId;
+    QPushButton* renameNode;
     QComboBox* speakerEdit;
     QTextEdit* nodeTextEdit;
     QLabel* nextNodeLabel;

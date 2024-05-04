@@ -14,7 +14,9 @@ TreeView::TreeView()
 {
     layout = new QGridLayout(this);
     nodes = new QListWidget(this);
-    idEdit = new QLineEdit(this);
+    nodeId = new QLabel(this);
+    nodeId->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    renameNode = new QPushButton(tr("Rename"), this);
     speakerEdit = new QComboBox(this);
     nodeTextEdit = new QTextEdit(this);
     nextNodeEdit = new QComboBox(this);
@@ -46,8 +48,9 @@ TreeView::TreeView()
     layout->setRowMinimumHeight(3, 80);
     layout->setRowMinimumHeight(4, 80);
     layout->addWidget(nodes, 1, 0, 2, 1);
-    layout->addWidget(idEdit, 0, 1, 1, 1);
-    layout->addWidget(speakerEdit, 0, 2, 1, 1);
+    layout->addWidget(nodeId, 3, 1, 1, 1);
+    layout->addWidget(renameNode, 3, 2, 1, 1);
+    layout->addWidget(speakerEdit, 0, 1, 1, 2);
     layout->addWidget(nodeTextEdit, 1, 1, 2, 2);
 
     layout->addWidget(addNode, 0, 0, 1, 1);
@@ -89,6 +92,8 @@ TreeView::TreeView()
     connect(removeSetFlag, SIGNAL(clicked()), this, SLOT(onRemoveSetFlag()));
     connect(effectEdit, SIGNAL(activated(int)), this, SLOT(onEffectActivate(int)));
     connect(nextNodeEdit, SIGNAL(activated(int)), this, SLOT(onNodeEditActivate(int)));
+    connect(renameNode, SIGNAL(clicked()), this, SLOT(onRenameNode()));
+
     nextNodeEdit->setEnabled(false);
     effectEdit->setEnabled(false);
 
@@ -115,7 +120,7 @@ void TreeView::newTree(std::vector<QString>& speakerList)
 
 void TreeView::m_displayNode(NodeItem* item)
 {
-    idEdit->setText(item->text());
+    nodeId->setText(item->text());
     QString txt = item->dialogueText;
     nodeTextEdit->setText(txt);
     bool found=false;
@@ -150,7 +155,7 @@ void TreeView::m_renameNode(QString old, QString str)
             nodes->item(i)->setText(str); //rename the node itself
         }
         NodeItem* node = (NodeItem*)nodes->item(i);
-        for(auto choice : node->choices) {
+        for(auto& choice : node->choices) {
             if(choice.nextNode == old) {
                 choice.nextNode = str; //rename all choices leading to this node
             }
@@ -163,6 +168,24 @@ void TreeView::m_renameNode(QString old, QString str)
     }
 }
 
+void TreeView::onRenameNode()
+{
+    if(!currentItem) return;
+    QDialog log(this);
+    QLineEdit name(&log);
+    QDialogButtonBox box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &log);
+    QFormLayout lay(&log);
+    lay.addRow(tr("New ID:"), &name);
+    lay.addRow(&box);
+    connect(&box, SIGNAL(accepted()), &log, SLOT(accept()));
+    connect(&box, SIGNAL(rejected()), &log, SLOT(reject()));
+    if(log.exec() != QDialog::Accepted) return;
+
+    m_renameNode(nodeId->text(), name.text());
+    nodeId->setText(name.text());
+    m_autosave();
+}
+
 void TreeView::m_autosave()
 {
     m_saveCurrentNode();
@@ -173,8 +196,8 @@ void TreeView::m_autosave()
 void TreeView::m_saveCurrentNode()
 {
     if(currentItem) {
-        m_renameNode(currentItem->text(), idEdit->text());
-        currentItem->setText(idEdit->text()); //save id
+        //m_renameNode(currentItem->text(), nodeId->text());
+        currentItem->setText(nodeId->text()); //save id
         currentItem->dialogueText=nodeTextEdit->toPlainText(); //save text
         currentItem->speaker=speakerEdit->currentText(); //save speaker
         currentItem->choices.clear();
@@ -195,7 +218,7 @@ void TreeView::onNodeSelect(QListWidgetItem* item)
     m_autosave();
     choiceTextEdit->setText(tr(""));
     currentItem = node;
-    idEdit->setText(node->text()); //set ID
+    nodeId->setText(node->text()); //set ID
     nodeTextEdit->setText(node->dialogueText); //set text
     bool found = false;
     for(int i = 0; i < speakerEdit->count(); ++i) {
@@ -348,6 +371,7 @@ ChoiceItem* TreeView::m_addChoice(ChoiceData dat, std::string name)
     item->dat = dat;
     item->dat.id = num;
     return item;
+    m_autosave();
 }
 
 void TreeView::onAddChoice()
@@ -644,7 +668,7 @@ TreeView::~TreeView()
 {
     delete layout;
     delete nodes;
-    delete idEdit;
+    delete nodeId;
     delete speakerEdit;
     delete nodeTextEdit;
     delete nextNodeEdit;
